@@ -38,7 +38,7 @@ class DropBoxController {
 
     initEvents(){
 
-        this.btnSendFileEl.addEventListener('click', event => {
+        this.btnSendFileEl.addEventListener('click', _event => {
 
             this.inputFilesEl.click();
         });
@@ -96,7 +96,7 @@ class DropBoxController {
 
                 ajax.open('POST', '/upload');
 
-                ajax.onload = event => {
+                ajax.onload = _event => {
 
                     try {
 
@@ -346,6 +346,8 @@ class DropBoxController {
                     ${this.getFileIconView(file)}
                     <div class="name text-center">${file.name}</div>
                 `;
+        
+        this.initEventsLi(li);
 
         return li;
     }
@@ -363,6 +365,52 @@ class DropBoxController {
 
                 this.listFilesEl.appendChild(this.getFileView(data, key));
             });
+        });
+    }
+
+    initEventsLi(li){
+
+        li.addEventListener('click', event => {
+
+            if (event.shiftKey){
+
+                let firstLi = this.listFilesEl.querySelector('.selected');
+
+                if(firstLi){
+
+                    let indexStart;
+                    let indexEnd;
+                    let lis = li.parentElement.childNodes;
+
+                    lis.forEach((el, index) => {
+
+                        if(firstLi === el) indexStart = index;
+                        if(li === el) indexEnd = index;
+                    });
+
+                    let index = [indexStart, indexEnd].sort();
+
+                    lis.forEach((el, i) => {
+
+                        if (i >= index[0] && i <= index[1]){
+
+                            el.classList.add('selected');
+                        }
+                    });
+                }
+
+                return true;
+            }
+
+            if (!event.ctrlKey){
+
+                this.listFilesEl.querySelectorAll('li.selected').forEach(el => {
+
+                    el.classList.remove('selected');
+                });
+            }
+
+            li.classList.toggle('selected');
         });
     }
 }

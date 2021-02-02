@@ -2,6 +2,8 @@ class DropBoxController {
 
     constructor(){
 
+        this.onselectionchange = new Event('selectionchange');
+
         this.btnSendFileEl = document.querySelector('#btn-send-file');
         this.inputFilesEl = document.querySelector('#files');
         this.snackModalEl = document.querySelector('#react-snackbar-root');
@@ -9,6 +11,10 @@ class DropBoxController {
         this.nameFileEl = this.snackModalEl.querySelector('.filename');
         this.timeLeftEl = this.snackModalEl.querySelector('.timeleft');
         this.listFilesEl = document.querySelector('#list-of-files-and-directories');
+
+        this.btnNewFolder = document.querySelector('#btn-new-folder');
+        this.btnDelete = document.querySelector('#btn-delete');
+        this.btnRename = document.querySelector('#btn-rename');
 
         this.connectFireBase();
         
@@ -36,7 +42,32 @@ class DropBoxController {
           firebase.analytics();
     }
 
+    getSelection(){
+
+        return this.listFilesEl.querySelectorAll('.selected');
+    }
+
     initEvents(){
+
+        this.listFilesEl.addEventListener('selectionchange', e => {
+
+            switch (this.getSelection().length){
+
+                case 0:
+                    this.btnRename.style.display = 'none';
+                    this.btnDelete.style.display = 'none';
+                break;
+
+                case 1:
+                    this.btnRename.style.display = 'block';
+                    this.btnDelete.style.display = 'block';
+                break;
+
+                default:
+                    this.btnRename.style.display = 'none';
+                    this.btnDelete.style.display = 'block';
+            }
+        });
 
         this.btnSendFileEl.addEventListener('click', _event => {
 
@@ -399,6 +430,8 @@ class DropBoxController {
                     });
                 }
 
+                this.listFilesEl.dispatchEvent(this.onselectionchange);
+
                 return true;
             }
 
@@ -411,6 +444,8 @@ class DropBoxController {
             }
 
             li.classList.toggle('selected');
+
+            this.listFilesEl.dispatchEvent(this.onselectionchange);
         });
     }
 }

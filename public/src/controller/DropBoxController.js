@@ -210,7 +210,12 @@ class DropBoxController {
 
                 responses.forEach(resp => {
 
-                    this.getFirebaseRef().push().set(resp.files['input-file']);
+                    this.getFirebaseRef().push().set({
+                        name: resp.name,
+                        type: resp.contentType,
+                        path: resp.customMetadata.downloadURL,
+                        size: resp.size
+                    });
                 });
 
                 this.uploadComplete();
@@ -284,7 +289,40 @@ class DropBoxController {
 
         [...files].forEach(file => {
 
-            let formData = new FormData();
+            promises.push(new Promise((resolve, reject) => {
+
+                let fileRef = firebase.storage().ref(this.currentFolder.join('/')).child(file.name);
+
+                let task = fileRef.put(file);
+
+                task.on('state_changed', snapshot => {
+
+                    this.uploadProgress({
+                        loaded: snapshot.bytesTransferred,
+                        total: snapshot.totalBytes
+                    }, file);
+
+                }, error => {
+
+                    reject(error);
+
+                }, () => {
+ 
+                        task.snapshot.ref.getDownloadURL().then( downloadURL => {
+                    
+                        task.snapshot.ref.updateMetadata({ customMetadata: { downloadURL }}).then( metadata => {
+                    
+                        resolve( metadata );
+                    
+                    }).catch( error => {
+                    
+                        reject( error );
+                        });
+                    });
+                });
+            }));
+
+            /* let formData = new FormData();
             formData.append('input-file', file);
 
             promises.push(this.ajax('/upload', 'POST', formData, () =>{
@@ -295,7 +333,7 @@ class DropBoxController {
 
                 this.startUploadTime = Date.now();
 
-            }));
+            })); */
         });
 
         return Promise.all(promises);
